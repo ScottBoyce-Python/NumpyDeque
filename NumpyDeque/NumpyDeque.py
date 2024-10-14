@@ -655,6 +655,40 @@ class NumpyDeque:
     def __len__(self):
         return self.size
 
+    def __getitem__(self, index):
+        return self.queue[index]
+
+    def __setitem__(self, index, value):
+        self.queue[index] = value
+
+    def __getattr__(self, name):
+        """
+        Handles unknown attributes by forwarding them to the NumPy.ndarray that holds the deque.
+        This allows the NumpyDeque to support NumPy attributes such as `shape`, `dtype`, etc.
+
+        Parameters:
+            name (str): The name of the missing attribute.
+
+        Returns:
+            The value of the attribute from `self.deque`.
+
+        Raises:
+            AttributeError: If the attribute does not exist in `self` or `self.deque`.
+        """
+
+        try:
+            # Forward any unknown attribute to the NumPy component
+            attr = getattr(self.deque, name)
+            if callable(attr):
+
+                def method(*args, **kwargs):
+                    return attr(*args, **kwargs)
+
+                return method
+            return attr
+        except AttributeError:
+            raise AttributeError(f"'NumpyDeque' object has no attribute '{name}'")
+
     def __repr__(self):
         s = repr(self.deque)
         s = s[s.find("(") :]  # drop "array" from name
