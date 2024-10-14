@@ -529,7 +529,7 @@ class NumpyDeque:
         Returns:
             NumpyDeque: A new instance of NumpyDeque that is a copy of the current deque.
         """
-        return NumpyDeque.array(self.deque, None, self.dtype, self._bcap, self._priority)
+        return NumpyDeque.array(self.deque, None, self.dtype, None, self._priority, _force_buffer_size=self._bcap)
 
     def clear(self):
         """
@@ -560,6 +560,252 @@ class NumpyDeque:
             np.ndarray: An array of indices where the specified value occurs in the deque.
         """
         return np.where(self.deque == value)[0]
+
+    def __getitem__(self, index):
+        return self.queue[index]
+
+    def __setitem__(self, index, value):
+        self.queue[index] = value
+
+    def __getattr__(self, name):
+        """
+        Handles unknown attributes by forwarding them to the NumPy.ndarray that holds the deque.
+        This allows the NumpyDeque to support NumPy attributes such as `shape`, `dtype`, etc.
+
+        Parameters:
+            name (str): The name of the missing attribute.
+
+        Returns:
+            The value of the attribute from `self.deque`.
+
+        Raises:
+            AttributeError: If the attribute does not exist in `self` or `self.deque`.
+        """
+
+        try:
+            # Forward any unknown attribute to the NumPy component
+            attr = getattr(self.deque, name)
+            if callable(attr):
+
+                def method(*args, **kwargs):
+                    return attr(*args, **kwargs)
+
+                return method
+            return attr
+        except AttributeError:
+            raise AttributeError(f"'NumpyDeque' object has no attribute '{name}'")
+
+    def __len__(self):
+        return self.size
+
+    def __repr__(self):
+        s = repr(self.deque)
+        s = s[s.find("(") :]  # drop "array" from name
+        return f"NumpyDeque{s}"
+
+    def __str__(self):
+        s = repr(self.deque)
+        s = s[s.find("[") : s.find("]") + 1]  # get core part of numpy array
+        return f"NumpyDeque({s})"
+
+    def __iter__(self):
+        return iter(self.deque)
+
+    def __copy__(self):
+        return self.copy()
+
+    def __deepcopy__(self, unused=None):
+        return self.copy()
+
+    def __contains__(self, value):
+        return value in self.deque
+
+    def __pos__(self):  # +val
+        return self.copy()
+
+    def __neg__(self):  # -val
+        res = self.copy()
+        res.deque *= -1
+        return res
+
+    def __abs__(self):  # abs(val)
+        res = self.copy()
+        res.abs()
+        return res
+
+    def __iadd__(self, other):  # To get called on addition with assignment e.g. a +=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque += other
+        return self
+
+    def __isub__(self, other):  # To get called on subtraction with assignment e.g. a -=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque -= other
+        return self
+
+    def __imul__(self, other):  # To get called on multiplication with assignment e.g. a *=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque *= other
+        return self
+
+    def __itruediv__(self, other):  # To get called on true division with assignment e.g. a /=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque /= other
+        return self
+
+    def __irtruediv__(self, other):  # To get called on true division with assignment e.g. a /=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque /= other
+        return self
+
+    def __ifloordiv__(self, other):  # To get called on integer division with assignment e.g. a //=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque //= other
+        return self
+
+    def __irfloordiv__(self, other):  # To get called on integer division with assignment e.g. a //=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque //= other
+        return self
+
+    def __imod__(self, other):  # To get called on modulo with assignment e.g. a%=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque %= other
+        return self
+
+    def __irmod__(self, other):  # To get called on modulo with assignment e.g. a%=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque %= other
+        return self
+
+    def __ipow__(self, other):  # To get called on exponents with assignment e.g. a **=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque **= other
+        return self
+
+    def __irpow__(self, other):  # To get called on exponents with assignment e.g. a **=b.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        self.deque **= other
+        return self
+
+    def __int__(self):  # To get called by built-int int() method to convert a type to an int.
+        return NumpyDeque.array(self.deque, self.maxsize, np.int32, None, self.priority, _force_buffer_size=self._bcap)
+
+    def __float__(self):  # To get called by built-int float() method to convert a type to float.
+        return NumpyDeque.array(
+            self.deque, self.maxsize, np.float64, None, self.priority, _force_buffer_size=self._bcap
+        )
+
+    def __add__(self, other):  # To get called on add operation using + operator
+        res = self.copy()
+        res += other
+        return res
+
+    def __radd__(self, other):  # To get called on add operation using + operator
+        res = self.copy()
+        res += other
+        return res
+
+    def __sub__(self, other):  # To get called on subtraction operation using - operator.
+        res = self.copy()
+        res -= other
+        return res
+
+    def __rsub__(self, other):  # To get called on subtraction operation using - operator.
+        res = self.copy()
+        res -= other
+        return res
+
+    def __mul__(self, other):  # To get called on multiplication operation using * operator.
+        res = self.copy()
+        res *= other
+        return res
+
+    def __rmul__(self, other):  # To get called on multiplication operation using * operator.
+        res = self.copy()
+        res *= other
+        return res
+
+    def __floordiv__(self, other):  # To get called on floor division operation using // operator.
+        res = self.copy()
+        res //= other
+        return res
+
+    def __rfloordiv__(self, other):  # To get called on floor division operation using // operator.
+        res = self.copy()
+        res //= other
+        return res
+
+    def __truediv__(self, other):  # To get called on division operation using / operator.
+        res = self.copy()
+        res /= other
+        return res
+
+    def __rtruediv__(self, other):  # To get called on division operation using / operator.
+        res = self.copy()
+        res /= other
+        return res
+
+    def __mod__(self, other):  # To get called on modulo operation using % operator.
+        res = self.copy()
+        res %= other
+        return res
+
+    def __rmod__(self, other):  # To get called on modulo operation using % operator.
+        res = self.copy()
+        res %= other
+        return res
+
+    def __pow__(self, other):  # To get called on calculating the power using ** operator.
+        res = self.copy()
+        res **= other
+        return res
+
+    def __rpow__(self, other):  # To get called on calculating the power using ** operator.
+        res = self.copy()
+        res **= other
+        return res
+
+    def __lt__(self, other):  # To get called on comparison using < operator.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        return self.deque < other
+
+    def __le__(self, other):  # To get called on comparison using <= operator.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        return self.deque <= other
+
+    def __gt__(self, other):  # To get called on comparison using > operator.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        return self.deque > other
+
+    def __ge__(self, other):  # To get called on comparison using >= operator.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        return self.deque >= other
+
+    def __eq__(self, other):  # To get called on comparison using == operator.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        return self.deque == other
+
+    def __ne__(self, other):  # To get called on comparison using != operator.
+        if isinstance(other, NumpyDeque):
+            other = other.deque
+        return self.deque != other
 
     def _shift_buffer(self):
         """
@@ -651,53 +897,6 @@ class NumpyDeque:
         n = array.shape[0]
         for i in range(n // 2):
             array[i], array[n - i - 1] = array[n - i - 1], array[i]
-
-    def __len__(self):
-        return self.size
-
-    def __getitem__(self, index):
-        return self.queue[index]
-
-    def __setitem__(self, index, value):
-        self.queue[index] = value
-
-    def __getattr__(self, name):
-        """
-        Handles unknown attributes by forwarding them to the NumPy.ndarray that holds the deque.
-        This allows the NumpyDeque to support NumPy attributes such as `shape`, `dtype`, etc.
-
-        Parameters:
-            name (str): The name of the missing attribute.
-
-        Returns:
-            The value of the attribute from `self.deque`.
-
-        Raises:
-            AttributeError: If the attribute does not exist in `self` or `self.deque`.
-        """
-
-        try:
-            # Forward any unknown attribute to the NumPy component
-            attr = getattr(self.deque, name)
-            if callable(attr):
-
-                def method(*args, **kwargs):
-                    return attr(*args, **kwargs)
-
-                return method
-            return attr
-        except AttributeError:
-            raise AttributeError(f"'NumpyDeque' object has no attribute '{name}'")
-
-    def __repr__(self):
-        s = repr(self.deque)
-        s = s[s.find("(") :]  # drop "array" from name
-        return f"NumpyDeque{s}"
-
-    def __str__(self):
-        s = repr(self.deque)
-        s = s[s.find("[") : s.find("]") + 1]  # get core part of numpy array
-        return f"NumpyDeque({s})"
 
 
 if __name__ == "__main__":
