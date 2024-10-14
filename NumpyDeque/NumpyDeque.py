@@ -561,6 +561,50 @@ class NumpyDeque:
         """
         return np.where(self.deque == value)[0]
 
+    def index(self, value, start=0, stop=None):
+        """
+        Return the deque index of value (at or after index start and before index stop).
+        Returns the first match
+
+        Parameters:
+            value: The value to search for.
+
+        Returns:
+            int: The the first index that value is found at.
+
+        """
+        p = self.where(value)
+        if len(p) > 0:
+            if stop is None:
+                stop = self.size
+            for i in p:
+                if start <= i < stop:
+                    return i
+        return None
+
+    def remove(self, value):
+        """
+        Remove the first occurrence of value.
+
+        Parameters:
+            value: The value to search for.
+        """
+        i = self.index(value)
+        if i is not None:
+            self.drop(i)
+
+    def count(self, value):
+        """
+        Count the number of deque elements equal to value.
+
+        Parameters:
+            value: The value that is being counted.
+
+        Returns:
+            int: The count.
+        """
+        return np.count_nonzero(self.deque == value)
+
     def __getitem__(self, index):
         return self.queue[index]
 
