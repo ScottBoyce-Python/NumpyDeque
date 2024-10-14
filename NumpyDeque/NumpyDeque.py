@@ -606,10 +606,10 @@ class NumpyDeque:
         return np.count_nonzero(self.deque == value)
 
     def __getitem__(self, index):
-        return self.queue[index]
+        return self.deque[index]
 
     def __setitem__(self, index, value):
-        self.queue[index] = value
+        self.deque[index] = value
 
     def __getattr__(self, name):
         """
@@ -944,4 +944,121 @@ class NumpyDeque:
 
 
 if __name__ == "__main__":
-    NumpyDeque(maxsize=5)
+    # Create an empty deque that stores up to 10 float64 numbers
+    d = NumpyDeque(maxsize=10, dtype=np.float64)
+
+    # Create a deque with 5 int64 zeros (the deque is initialized to maxsize with 0).
+    d = NumpyDeque(maxsize=5, fill=0, dtype=np.int64)
+
+    # Create a deque from an array. Its maxsize is automatically set to 5.
+    d = NumpyDeque.array([1, 2, 3, 4, 5])
+
+    # Create a deque from an array. Its maxsize is set to 5.
+    d = NumpyDeque.array([1, 2, 3], 5)
+
+    ### Adding to Right of The Deque
+
+    d = NumpyDeque(maxsize=5, dtype=np.int64)
+
+    # Put a value to the right on the deque
+    d.put(5)
+    d.put(7)
+    d.put(9)
+    print(d)  # Output: NumpyDeque([5, 7, 9])
+    d.put(11)
+    d.put(13)
+    print(d)  # Output: NumpyDeque([5, 7, 9, 11, 13])
+    d.put(15)  # 5 is dropped
+    print(d)  # Output: NumpyDeque([7, 9, 11, 13, 15])
+
+    d.putter([1, 2, 3])
+    print(d)  # Output: NumpyDeque([13, 15, 1, 2, 3])
+
+    d.putter([-1, -2, -3, -4, -5, -6, -7])
+    print(d)  # Output: NumpyDeque([-3, -4, -5, -6, -7])
+
+    d.putter([1, 2, 3, 4, 5])
+    print(d)  # Output: NumpyDeque([1, 2, 3, 4, 5])
+
+    ### Adding to Left of The Deque
+
+    d = NumpyDeque(maxsize=5, dtype=np.int64)
+
+    # Put a value to the right on the deque
+    d.putleft(5)
+    d.putleft(7)
+    d.putleft(9)
+    print(d)  # Output: NumpyDeque([9, 7, 5])
+    d.putleft(11)
+    d.putleft(13)
+    print(d)  # Output: NumpyDeque([13, 11, 9, 7, 5])
+    d.putleft(15)  # 5 is dropped
+    print(d)  # Output: NumpyDeque([15, 13, 11, 9, 7])
+
+    d.putterleft([1, 2, 3])
+    print(d)  # Output: NumpyDeque([3, 2, 1, 15, 13])
+
+    d.putterleft([-1, -2, -3, -4, -5, -6, -7])
+    print(d)  # Output: NumpyDeque([-7, -6, -5, -4, -3])
+
+    d.putterleft([1, 2, 3, 4, 5])
+    print(d)  # Output: NumpyDeque([5, 4, 3, 2, 1])
+
+    ### Removing Elements
+
+    d = NumpyDeque.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+
+    # Remove and return the last element
+    print(d)  # Output: NumpyDeque([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    rightmost_value = d.pop()
+    print(d)  # Output: NumpyDeque([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    print(rightmost_value)  # Output: 10
+
+    # Remove and return the first element
+    leftmost_value = d.popleft()
+    print(d)  # Output: NumpyDeque([2, 3, 4, 5, 6, 7, 8, 9])
+    print(leftmost_value)  # Output: 1
+
+    # Remove and return the third element
+    third_value = d.drop(2)
+    print(d)  # Output: NumpyDeque([2, 3, 5, 6, 7, 8, 9])
+    print(third_value)  # Output: 4
+
+    # If the number 8 and 1 are found, remove the first appearance
+    d.remove(8)
+    print(d)  # Output: NumpyDeque([2, 3, 5, 6, 7, 9])
+    d.remove(1)  # Nothing happens
+    print(d)  # Output: NumpyDeque([2, 3, 5, 6, 7, 9])
+
+    ### Slicing
+
+    d = NumpyDeque.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], maxsize=10)
+
+    # Slice behaves like NumPy arrays, but be careful with indexes
+    print(d[1:4])  # Output: [1, 2, 3]
+
+    d[1:3] = [-1, -2]  # Output: [2, 3, 4]
+    print(d)  # Output: NumpyDeque([0, -1, -2, 3, 4, 5, 6, 7, 8, 9])
+
+    # Note that values move once maxsize is exceeded
+    print(d[2])  # Output: -2
+    d.put(10)
+    print(d)  # Output: NumpyDeque([-1, -2, 3, 4, 5, 6, 7, 8, 9, 10])
+    print(d[2])  # Output: 3
+    d.put(11)
+    print(d)  # Output: NumpyDeque([-2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    print(d[2])  # Output: 4
+    d.putleft(99)
+    print(d)  # Output: NumpyDeque([99, -2, 3, 4, 5, 6, 7, 8, 9, 10])
+    print(d[2])  # Output: 3
+
+    # Becareful about the size
+    d = NumpyDeque(maxsize=5)
+    d.put(5)
+    d.put(4)
+    d.put(3)
+    print(d)  # Output: NumpyDeque([5, 4, 3])
+    try:
+        print(d[3])  # Raises index error!!!
+    except IndexError:
+        pass
