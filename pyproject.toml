@@ -43,8 +43,8 @@ content-type = "text/markdown"
 
 [tool.pytest.ini_options]
 # agressive parallel options
-addopts = "-ra" # Running with VSCode, requires serial.
-# addopts = "-ra  -n2" # Defaults to 2 parallel tests, comment out if you want serial.
+# addopts = "-ra" # Running with pytest-xdist not installed, requires serial.
+addopts = "-ra  -n2" # Defaults to 2 parallel tests, comment out if you want serial.
 # addopts = "-ra --dist worksteal -nauto" # Defaults to parallel tests, comment out if you want serial.
 # addopts = "-ra -v --dist worksteal -nauto" # parallel run with verbose output.
 # addopts = "-ra --dist worksteal -nauto -q"  # supress output during testing
