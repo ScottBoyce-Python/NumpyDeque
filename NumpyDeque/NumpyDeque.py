@@ -53,7 +53,7 @@ _MAX_AUTO_BUFFER = 2**11  # Maximum size increase of buffer allowed to include u
 
 class NumpyDeque:
     """
-    A numpy ndarray based double-ended queue (deque) with a maximum size.
+    A double-ended queue (deque) with a maximum size that is also a `numpy.ndarray` .
     The deque has an initial size of zero and grows as values are added.
     When the deque has maxsize values and another value is added (put or putleft),
     the value on the opposite end is dropped. The object's `deque` attribute
@@ -66,7 +66,19 @@ class NumpyDeque:
     `put` operations (adding to the end), or for `putleft` operations (adding to start).
 
     Attributes:
-        deque (np.ndarray): The current deque, representing the active elements.
+        deque (np.ndarray):     The current deque, representing the active elements.
+        size (int):             Current number of elements in the deque.
+        maxsize (int):          Maximum size of the deque. Once the limit is reached,
+                                adding an element will discard the element on the opposite end.
+        dtype (numpy.dtype):    Data type of the elements stored in the deque.
+        priority (int):         The buffer priority for internal shifting of the deque.
+                                Set to:
+                                    "equal"    : buffer space gives equal priority to put and putleft
+                                    "right"    : buffer space gives       priority to put
+                                    "left"     : buffer space gives       priority to putleft
+                                    "leftonly" : buffer space gives all   priority to put     (putleft -> internal shift)
+                                    "rightonly": buffer space gives all   priority to putleft (put     -> internal shift)
+        buffer_size (int):      The size of the underlying buffer that holds the deque.
 
     Private Attributes:
         _data (np.ndarray): The underlying NumPy array that stores the elements plus buffered space.
@@ -77,6 +89,77 @@ class NumpyDeque:
         _i (int): Index in _data that is the first value in the deque.
         _j (int): Index plus one in _data that is the last value in the deque.
 
+    Constructors:
+        array(array_like, maxsize=None): Create a NumpyDeque from an existing array-like object.
+
+    Methods:
+        put(value):           Adds an element to the right end of the deque.
+                              If the deque is at maxsize, then removes the left most element.
+        putleft(value):       Adds an element to the left end of the deque.
+                              If the deque is at maxsize, then removes the right most element.
+
+        putter(iterable):     Adds multiple elements to the right of the deque from an iterable.
+                              If the deque is at maxsize, then removes the left most elements.
+        putterleft(iterable): Adds multiple elements to the left of the deque from an iterable.
+                              If the deque is at maxsize, then removes the right most elements.
+
+        pop():                Removes and returns the rightmost element of the deque.
+        popleft():            Removes and returns the leftmost element of the deque.
+        remove(value):        Removes the first occurrence of the specified value from the deque.
+        drop(index):          Removes and returns the element at the specified index.
+        clear():              Removes all elements from the deque, leaving it empty.
+
+        index(value):         Returns the index of the first occurrence of the specified value in the deque.
+        count(value):         Returns the number of occurrences of the specified value in the deque.
+        sort():               Sorts the order of the elements in the deque in-place.
+        reverse():            Reverses the order of the elements in the deque in-place.
+
+
+    Examples:
+        >>> import numpy as np
+        >>> from NumpyDeque import NumpyDeque
+
+        >>> # Create an empty deque with a maximum size of 5
+        >>> d = NumpyDeque(maxsize=5, dtype=np.int64)
+        >>> d.put(1)
+        >>> d.put(2)
+        >>> print(d)
+        NumpyDeque([1, 2])
+
+        >>> # Add elements until it reaches max size
+        >>> d.put(3)
+        >>> d.put(4)
+        >>> d.put(5)
+        >>> print(d)
+        NumpyDeque([1, 2, 3, 4, 5])
+        >>> # Adding values that exceed maxsize results in the opposite end being dropped
+        >>> d.put(6)  # To to right, so drops the left
+        >>> print(d)
+        NumpyDeque([2, 3, 4, 5, 6])  # 1 is discarded
+
+        >>> # Adding to the left end of the deque
+        >>> d.putleft(0)  # To to left, so drops the right
+        >>> print(d)
+        NumpyDeque([0, 2, 3, 4, 5])  # 6 is discarded from the right end
+
+        >>> # Removing elements
+        >>> rightmost = d.pop()
+        >>> print(rightmost)  # Output: 5
+        >>> print(d)  # NumpyDeque([0, 2, 3, 4])
+
+        >>> # Creating a deque from an array
+        >>> arr = np.array([10, 20, 30, 40])
+        >>> d = NumpyDeque.array(arr)
+        >>> print(d)
+        NumpyDeque([10, 20, 30, 40])
+
+        >>> # Using numpy array methods
+        >>> mean_value = d.mean()
+        >>> print(mean_value)  # Output: 25.0
+
+        # Slicing works similar to numpy arrays
+        >>> print(d[1:3])
+        NumpyDeque([20, 30])
     """
 
     deque: np.ndarray  # The pointer to the current deque.
