@@ -47,6 +47,7 @@ __all__ = [
     "NumpyDeque",
 ]
 
+_PRIORITY_FLAG = {"e": "equal", "l": "left", "lo": "leftonly", "r": "right", "ro": "rightonly"}
 _MAX_AUTO_BUFFER = 2**11  # Maximum size increase of buffer allowed to include user requested buffer and auto-buffer
 
 
@@ -205,6 +206,16 @@ class NumpyDeque:
         """Get the data type of the elements stored in the deque."""
         return self._data.dtype
 
+    @property
+    def priority(self):
+        """Get the buffer priority of the deque."""
+        return _PRIORITY_FLAG[self._priority]
+
+    @property
+    def buffer_size(self):
+        """Get the maximum capacity of the buffer that contains the deque."""
+        return self._bcap
+
     @classmethod
     def array(
         cls,
@@ -254,7 +265,14 @@ class NumpyDeque:
             try:
                 size = object.size
             except (AttributeError, TypeError):  # assume its a scalar
-                return cls(1, object, dtype, buffer_padding, _force_buffer_size)
+                if maxsize is not None:
+                    maxsize = max(1, maxsize)
+                return cls(maxsize, object, dtype, buffer_padding, _force_buffer_size)
+
+        if maxsize is None:
+            maxsize = size
+        else:
+            maxsize = max(size, maxsize)
 
         if dtype is None:
             try:
@@ -266,9 +284,9 @@ class NumpyDeque:
                     dtype = np.array(object[0]).dtype
 
         if buffer_padding is None and isinstance(object, NumpyDeque):
-            buffer_padding = object._bcap
+            _force_buffer_size = object._bcap
 
-        ob = cls(size, None, dtype, buffer_padding, priority, _force_buffer_size)
+        ob = cls(maxsize, None, dtype, buffer_padding, priority, _force_buffer_size=_force_buffer_size)
         ob._i = ob._s
         ob._j = ob._i + size
         ob._data[ob._i : ob._j] = object
@@ -293,9 +311,29 @@ class NumpyDeque:
         self._j += 1
         self.deque = self._data[self._i : self._j]
 
+    def putleft(self, value):
+        """
+        Add a value to the left end of the deque. If the len(deque) == maxsize,
+        the right-most value (index=-1) is dropped.
+
+        Parameters:
+            value: The value to be added to the deque.
+        """
+
+        if self._j - self._i == self._qcap:
+            self._j -= 1
+
+        self._i -= 1
+        if self._i == -1:
+            self._shift_buffer()
+
+        self._data[self._i] = value
+
+        self.deque = self._data[self._i : self._j]
+
     def putter(self, values):
         """
-        Add multiple values to the deque in an optimized manner.
+        Add multiple values to the right of the deque in an optimized manner.
         This is more efficient than repeatedly calling `put()` for each value.
         This is equivalent to:
         ```
@@ -317,7 +355,8 @@ class NumpyDeque:
             return
 
         if dim >= self._qcap:  # overwriting the entire deque move to buffer start
-            self._i, self._j = self._s, self._i + self._qcap
+            self._i = self._s
+            self._j = self._i + self._qcap
             self._data[self._i : self._j] = values[dim - self._qcap :]
             self.deque = self._data[self._i : self._j]
             return
@@ -331,6 +370,62 @@ class NumpyDeque:
 
         self._data[self._j : self._j + dim] = values
         self._j += dim
+        self.deque = self._data[self._i : self._j]
+
+    def putterleft(self, values):
+        """
+        Add multiple values to the left of the deque in an optimized manner.
+        This is more efficient than repeatedly calling `putleft()` for each value.
+        This is equivalent to:
+        ```
+            for v in values:
+                self.putleft(v)
+        ```
+
+        Parameters:
+            values (iterable, array-like or scalar): The values to add to the deque.
+        """
+        try:
+            dim = len(values)
+        except TypeError:  # iterator so need to manually add values
+            try:
+                for v in values:
+                    self.putleft(v)
+            except TypeError:  # scalar, so just call regular put
+                self.putleft(values)
+            return
+
+        if dim >= self._qcap:  # overwriting the entire deque move to buffer start
+            self._i = self._s
+            self._j = self._i + self._qcap
+            self._data[self._i : self._j] = values[::-1][: self._qcap]
+            self.deque = self._data[self._i : self._j]
+            return
+
+        # if self._j - self._i == self._qcap:
+        #     self._j -= 1
+
+        # self._i -= 1
+        # if self._i == -1:
+        #     self._shift_buffer()
+
+        # self._data[self._i] = value
+
+        # self.deque = self._data[self._i : self._j]
+
+        new_size = self._j - self._i + dim
+        if new_size > self._qcap:
+            self._j -= new_size - self._qcap
+
+        if self._i - dim < 0:  # shift buffer
+            s = self._s + dim
+            j = s + self._j - self._i
+            self._data[s:j] = self._data[self._i : self._j]
+            self._i, self._j = self._s, j
+        else:
+            self._i -= dim
+
+        self._data[self._i : self._i + dim] = values[::-1]
         self.deque = self._data[self._i : self._j]
 
     def pop(self):
@@ -393,7 +488,7 @@ class NumpyDeque:
 
         if "o" in self._priority:  # user specified priority for buffer
             priority = self._priority
-        elif (self._j - self._s) <= (self._s - self._i):  # index to drop is closer to _j
+        elif (self._j - index) <= (index - self._i):  # index to drop is closer to _j
             priority = "ro"
         else:
             priority = "lo"
@@ -434,7 +529,7 @@ class NumpyDeque:
         Returns:
             NumpyDeque: A new instance of NumpyDeque that is a copy of the current deque.
         """
-        return NumpyDeque.array(self.deque, self.dtype, self._bcap, self._priority)
+        return NumpyDeque.array(self.deque, None, self.dtype, self._bcap, self._priority)
 
     def clear(self):
         """
@@ -470,8 +565,18 @@ class NumpyDeque:
         """
         Internally shift the buffer to accommodate newly added elements and ensure efficient use of buffer space.
         """
-        j = self._s + self._j - self._i
-        self._data[self._s : j] = self._data[self._i : self._j]
+        if self._i == -1:  # putleft shift
+            s = self._s + 1  # - self._i
+            i = 0
+            j = s + self._j  # - i
+        elif self._i >= 0:  # put and putter shift
+            s = self._s
+            i = self._i
+            j = self._s + self._j - self._i
+        else:
+            raise RuntimeError("NumpyDeque._shift_buffer encountered an invalid _i index.")
+
+        self._data[s:j] = self._data[i : self._j]
         self._i, self._j = self._s, j
 
     @staticmethod
