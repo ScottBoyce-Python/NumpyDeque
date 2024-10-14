@@ -7,12 +7,12 @@ def test_initialization_array():
     d = NumpyDeque.array(array_like)
     assert len(d) == 5
     assert d.maxsize == 5
-    assert np.all(d.deque == np.array(array_like))
+    assert (d.deque == np.array(array_like)).all()
 
     d = NumpyDeque.array(array_like, maxsize=10)
     assert len(d) == 5
     assert d.maxsize == 10
-    assert np.all(d.deque == np.array(array_like))
+    assert (d.deque == np.array(array_like)).all()
 
 
 def test_empty_initialization():
@@ -31,13 +31,13 @@ def test_fill_initialization():
     d = NumpyDeque(maxsize=10, fill=1)
     assert len(d) == 10
     assert d.maxsize == 10
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 10
 
     d = NumpyDeque(maxsize=100, fill=2)
     assert len(d) == 100
     assert d.maxsize == 100
-    assert np.all(d.deque == 2)
+    assert (d.deque == 2).all()
     assert len(d.deque) == 100
 
 
@@ -58,14 +58,14 @@ def test_int64_initialization():
     assert d.dtype == np.int64
     assert len(d) == 10
     assert d.maxsize == 10
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 10
 
     d = NumpyDeque(maxsize=100, fill=2, dtype=np.int64)
     assert d.dtype == np.int64
     assert len(d) == 100
     assert d.maxsize == 100
-    assert np.all(d.deque == 2)
+    assert (d.deque == 2).all()
     assert len(d.deque) == 100
 
 
@@ -86,14 +86,14 @@ def test_float64_initialization():
     assert d.dtype == np.float64
     assert len(d) == 10
     assert d.maxsize == 10
-    assert np.all(d.deque == 1.0)
+    assert (d.deque == 1.0).all()
     assert len(d.deque) == 10
 
     d = NumpyDeque(maxsize=100, fill=2, dtype=np.float64)
     assert d.dtype == np.float64
     assert len(d) == 100
     assert d.maxsize == 100
-    assert np.all(d.deque == 2.0)
+    assert (d.deque == 2.0).all()
     assert len(d.deque) == 100
 
 
@@ -132,7 +132,7 @@ def test_pad_initialization():
     assert d.buffer_size >= siz + 2 * pad
     assert len(d) == siz
     assert d.maxsize == siz
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
 
     siz = 100
     pad = 10
@@ -140,7 +140,7 @@ def test_pad_initialization():
     assert d.buffer_size >= siz + 2 * pad
     assert len(d) == siz
     assert d.maxsize == siz
-    assert np.all(d.deque == 2)
+    assert (d.deque == 2).all()
 
     siz = 10
     pad = 100
@@ -148,7 +148,7 @@ def test_pad_initialization():
     assert d.buffer_size >= siz + 2 * pad
     assert len(d) == siz
     assert d.maxsize == siz
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
 
     siz = 100
     pad = 100
@@ -156,7 +156,7 @@ def test_pad_initialization():
     assert d.buffer_size >= siz + 2 * pad
     assert len(d) == siz
     assert d.maxsize == siz
-    assert np.all(d.deque == 2)
+    assert (d.deque == 2).all()
 
 
 def test_priority_initialization():
@@ -168,7 +168,7 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=10, fill=1, priority="right")
     assert len(d) == 10
     assert d.maxsize == 10
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 10
 
     d = NumpyDeque(maxsize=100, priority="right")
@@ -179,7 +179,7 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=100, fill=1, priority="right")
     assert len(d) == 100
     assert d.maxsize == 100
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 100
 
     d = NumpyDeque(maxsize=10, priority="rightonly")
@@ -190,7 +190,7 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=10, fill=1, priority="rightonly")
     assert len(d) == 10
     assert d.maxsize == 10
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 10
 
     d = NumpyDeque(maxsize=100, priority="rightonly")
@@ -201,7 +201,7 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=100, fill=1, priority="rightonly")
     assert len(d) == 100
     assert d.maxsize == 100
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 100
 
     d = NumpyDeque(maxsize=10, priority="left")
@@ -212,7 +212,7 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=10, fill=1, priority="left")
     assert len(d) == 10
     assert d.maxsize == 10
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 10
 
     d = NumpyDeque(maxsize=100, priority="left")
@@ -223,7 +223,7 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=100, fill=1, priority="left")
     assert len(d) == 100
     assert d.maxsize == 100
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 100
 
     d = NumpyDeque(maxsize=10, priority="leftonly")
@@ -234,7 +234,7 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=10, fill=1, priority="leftonly")
     assert len(d) == 10
     assert d.maxsize == 10
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 10
 
     d = NumpyDeque(maxsize=100, priority="leftonly")
@@ -245,5 +245,5 @@ def test_priority_initialization():
     d = NumpyDeque(maxsize=100, fill=1, priority="leftonly")
     assert len(d) == 100
     assert d.maxsize == 100
-    assert np.all(d.deque == 1)
+    assert (d.deque == 1).all()
     assert len(d.deque) == 100
