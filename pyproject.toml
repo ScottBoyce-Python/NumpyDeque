@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "NumpyDeque"
-description = " "
+description = "NumpyDeque is a numpy.ndarray based double-ended queue (deque) with a maximum size. This double-ended queue is efficiently done by using a padded-buffer array."
 authors = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 maintainers = [{ name = "Scott E. Boyce", email = "Boyce@engineer.com" }]
 license = { text = "MIT" }
