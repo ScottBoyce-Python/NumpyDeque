@@ -2,7 +2,7 @@
 Metadata associated with NumpyDeque.py
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "Scott E. Boyce"
 __credits__ = "Scott E. Boyce"
 __maintainer__ = "Scott E. Boyce"
