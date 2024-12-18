@@ -784,19 +784,7 @@ class NumpyDeque:
         self.deque /= other
         return self
 
-    def __irtruediv__(self, other):  # To get called on true division with assignment e.g. a /=b.
-        if isinstance(other, NumpyDeque):
-            other = other.deque
-        self.deque /= other
-        return self
-
     def __ifloordiv__(self, other):  # To get called on integer division with assignment e.g. a //=b.
-        if isinstance(other, NumpyDeque):
-            other = other.deque
-        self.deque //= other
-        return self
-
-    def __irfloordiv__(self, other):  # To get called on integer division with assignment e.g. a //=b.
         if isinstance(other, NumpyDeque):
             other = other.deque
         self.deque //= other
@@ -808,19 +796,7 @@ class NumpyDeque:
         self.deque %= other
         return self
 
-    def __irmod__(self, other):  # To get called on modulo with assignment e.g. a%=b.
-        if isinstance(other, NumpyDeque):
-            other = other.deque
-        self.deque %= other
-        return self
-
     def __ipow__(self, other):  # To get called on exponents with assignment e.g. a **=b.
-        if isinstance(other, NumpyDeque):
-            other = other.deque
-        self.deque **= other
-        return self
-
-    def __irpow__(self, other):  # To get called on exponents with assignment e.g. a **=b.
         if isinstance(other, NumpyDeque):
             other = other.deque
         self.deque **= other
